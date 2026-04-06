@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>PokéScan - Collection Manager</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUG9rw6lTY2FuIiwic2hvcnRfbmFtZSI6IlBva8OpU2NhbiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGExMDFhIiwidGhlbWVfY29sb3IiOiIjZTg0MTQyIn0=">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
 
@@ -15,7 +14,6 @@
   --accent: #e84142;
   --accent2: #ff6b6b;
   --gold: #ffd700;
-  --silver: #c0c0c0;
   --text: #e8eaf0;
   --text2: #8892a4;
   --green: #22c55e;
@@ -77,7 +75,7 @@ body {
   background: linear-gradient(145deg, var(--bg2), var(--bg3));
   border: 2px dashed rgba(232,65,66,0.4);
   border-radius: 16px; padding: 40px 20px; text-align: center;
-  cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+  cursor: pointer; transition: all 0.3s;
 }
 .scan-zone:hover, .scan-zone.dragover { border-color: var(--accent); background: rgba(232,65,66,0.05); }
 .scan-zone-icon { font-size: 3rem; margin-bottom: 12px; }
@@ -102,7 +100,6 @@ body {
   font-weight: 700; font-size: 1rem; cursor: pointer; letter-spacing: 1px; transition: transform 0.15s;
 }
 .scan-btn:active { transform: scale(0.97); }
-.scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .scan-progress { display: none; margin-top: 16px; text-align: center; }
 .scan-progress .spinner {
@@ -122,7 +119,6 @@ body {
   padding: 14px 16px; background: rgba(232,65,66,0.1);
   border-bottom: 1px solid rgba(255,255,255,0.05);
   font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.85rem;
-  display: flex; align-items: center; gap: 8px;
 }
 .result-body { padding: 16px; }
 
@@ -290,6 +286,22 @@ body {
   font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 8px;
 }
 
+/* Model selector */
+.model-selector { display: flex; gap: 8px; margin-top: 8px; }
+.model-btn {
+  flex: 1; padding: 12px 8px; border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.1); background: var(--bg);
+  color: var(--text2); font-family: 'Exo 2', sans-serif;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  text-align: center;
+}
+.model-btn.active {
+  border-color: var(--accent); background: rgba(232,65,66,0.1); color: var(--accent);
+}
+.model-btn .model-price {
+  display: block; font-size: 0.65rem; margin-top: 2px; opacity: 0.7;
+}
+
 .toast {
   position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px);
   background: var(--green); color: white; padding: 10px 20px; border-radius: 10px;
@@ -444,20 +456,38 @@ body {
 <div class="page" id="page-settings">
   <div class="setting-group">
     <div class="setting-title">🔑 Clé API Anthropic</div>
-    <div class="setting-desc">Nécessaire pour l'analyse IA des cartes par photo. Créez-en une sur <strong>console.anthropic.com</strong> → API Keys. La clé reste stockée localement.</div>
+    <div class="setting-desc">Créez-en une sur <strong>console.anthropic.com</strong> → API Keys. Stockée localement uniquement.</div>
     <input class="setting-input" id="apiKeyInput" type="password" placeholder="sk-ant-..." oninput="saveApiKey()">
     <div style="margin-top:6px;font-size:0.7rem;" id="apiKeyStatus"></div>
   </div>
+
+  <div class="setting-group">
+    <div class="setting-title">🤖 Modèle IA pour le scan</div>
+    <div class="setting-desc">Haiku est 10x moins cher mais un peu moins précis. Sonnet est plus fiable pour les cartes difficiles.</div>
+    <div class="model-selector">
+      <button class="model-btn" data-model="haiku" onclick="selectModel('haiku')">
+        ⚡ Haiku
+        <span class="model-price">~0.001$ / scan</span>
+      </button>
+      <button class="model-btn active" data-model="sonnet" onclick="selectModel('sonnet')">
+        🎯 Sonnet
+        <span class="model-price">~0.01$ / scan</span>
+      </button>
+    </div>
+  </div>
+
   <div class="setting-group">
     <div class="setting-title">💰 Prix automatiques</div>
-    <div class="setting-desc">Les prix sont récupérés gratuitement via l'API pokemontcg.io (Cardmarket EUR + TCGPlayer USD). Aucune clé requise.</div>
+    <div class="setting-desc">Via pokemontcg.io — Cardmarket EUR + TCGPlayer USD. Gratuit, aucune clé requise.</div>
   </div>
+
   <div class="setting-group">
     <div class="setting-title">📋 Import/Export JSON</div>
     <button class="manual-add-btn" style="width:100%;margin-top:8px;" onclick="exportJSON()">📤 Exporter JSON</button>
     <button class="manual-add-btn" style="width:100%;margin-top:8px;" onclick="document.getElementById('importJson').click()">📥 Importer JSON</button>
     <input type="file" id="importJson" accept=".json" style="display:none" onchange="importJSON(event)">
   </div>
+
   <div class="setting-group">
     <div class="setting-title">🗑️ Zone Danger</div>
     <button class="danger-btn" onclick="clearAll()">Supprimer toute la collection</button>
@@ -529,6 +559,7 @@ body {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+// ═══ STATE ═══
 let collection = JSON.parse(localStorage.getItem('pokescan_collection') || '[]');
 let currentFilter = 'all';
 let editingId = null;
@@ -537,10 +568,31 @@ let selectedFinish = '';
 let editSelectedFinish = '';
 let lastPriceData = null;
 
+// ═══ MODELS ═══
+const MODELS = {
+  haiku: 'claude-haiku-4-5-20251001',
+  sonnet: 'claude-sonnet-4-20250514'
+};
+
+function getSelectedModel() {
+  return localStorage.getItem('pokescan_model') || 'sonnet';
+}
+
+function selectModel(model) {
+  localStorage.setItem('pokescan_model', model);
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.toggle('active', b.dataset.model === model));
+}
+
+// ═══ INIT ═══
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('apiKeyInput').value = localStorage.getItem('pokescan_apikey') || '';
   updateApiKeyStatus();
   updateHeaderStats();
+
+  // Restore model selection
+  const m = getSelectedModel();
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.toggle('active', b.dataset.model === m));
+
   document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
   const zone = document.getElementById('scanZone');
   ['dragenter','dragover'].forEach(e => zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.add('dragover'); }));
@@ -581,14 +633,18 @@ function resetScan() {
   lastPriceData = null;
 }
 
+// ═══ AI ANALYSIS ═══
 async function analyzeCard() {
   const apiKey = localStorage.getItem('pokescan_apikey');
   if (!apiKey) { toast('⚠️ Configurez votre clé API dans Config', 'var(--accent)'); return; }
   if (!currentImageBase64) return;
 
+  const modelKey = getSelectedModel();
+  const modelId = MODELS[modelKey];
+
   document.getElementById('scanBtn').style.display = 'none';
   document.getElementById('scanProgress').style.display = 'block';
-  document.getElementById('progressText').textContent = 'Analyse IA en cours...';
+  document.getElementById('progressText').textContent = `Analyse via ${modelKey === 'haiku' ? 'Haiku ⚡' : 'Sonnet 🎯'}...`;
   document.getElementById('resultCard').style.display = 'none';
 
   const prompt = `Tu es un expert en cartes Pokémon TCG. Analyse cette photo d'une carte Pokémon et extrais les informations suivantes.
@@ -621,7 +677,7 @@ Si tu ne peux pas identifier un champ, mets "?".`;
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: modelId,
         max_tokens: 500,
         messages: [{ role: 'user', content: [
           { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: currentImageBase64 }},
@@ -689,14 +745,13 @@ async function fetchPriceFromAPI(cardName, cardNumber) {
     let resp = await fetch(url);
     let data = await resp.json();
 
-    // Retry looser if no results
-    if (!data.data || data.data.length === 0) {
+    if (!data.data || !data.data.length) {
       const url2 = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`name:"${cardName}"`)}&pageSize=5&select=name,number,set,rarity,tcgplayer,cardmarket`;
       resp = await fetch(url2);
       data = await resp.json();
     }
 
-    if (!data.data || data.data.length === 0) {
+    if (!data.data || !data.data.length) {
       priceContent.innerHTML = '<div class="price-row"><span class="price-label">Aucun résultat trouvé</span></div>';
       return;
     }
@@ -717,7 +772,7 @@ async function fetchPriceFromAPI(cardName, cardNumber) {
       if (variant) priceUSD = variant.market || variant.mid || variant.low || null;
     }
 
-    lastPriceData = { priceEUR, priceUSD, setName: card.set?.name, cardName: card.name, cardNumber: card.number };
+    lastPriceData = { priceEUR, priceUSD };
 
     let html = '';
     if (priceEUR !== null) html += `<div class="price-row"><span class="price-label">Cardmarket (EUR)</span><span class="price-value">${priceEUR.toFixed(2)} €</span></div>`;
@@ -931,7 +986,6 @@ function renderStats() {
 
   let html = '';
 
-  // Top valuable
   const valued = collection.filter(c => c.price).sort((a,b) => (b.price*(b.qty||1)) - (a.price*(a.qty||1))).slice(0,5);
   if (valued.length) {
     const mx = valued[0].price * (valued[0].qty||1);
@@ -943,7 +997,6 @@ function renderStats() {
     html += `</div>`;
   }
 
-  // By set
   const sc = {}; collection.forEach(c => { const s = c.set||'?'; sc[s] = (sc[s]||0) + (c.qty||1); });
   const ss = Object.entries(sc).sort((a,b) => b[1]-a[1]).slice(0,8);
   const ms = Math.max(...ss.map(s=>s[1]),1);
@@ -953,7 +1006,6 @@ function renderStats() {
     html += `</div>`;
   }
 
-  // By finish
   const fc = { Standard:0, Reverse:0, Holo:0 };
   collection.forEach(c => { fc[c.finish||'Standard'] += (c.qty||1); });
   const mf = Math.max(...Object.values(fc),1);
@@ -962,7 +1014,6 @@ function renderStats() {
   Object.entries(fc).forEach(([n,ct]) => { html += `<div class="chart-bar-row"><div class="chart-bar-label">${n}</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:${ct/mf*100}%;background:${fclr[n]}"></div></div><div class="chart-bar-count">${ct}</div></div>`; });
   html += `</div>`;
 
-  // Value by set
   const sv = {}; collection.forEach(c => { if (!c.price) return; const s = c.set||'?'; sv[s] = (sv[s]||0) + c.price*(c.qty||1); });
   const svs = Object.entries(sv).sort((a,b) => b[1]-a[1]).slice(0,6);
   const msv = Math.max(...svs.map(s=>s[1]),1);
@@ -997,8 +1048,7 @@ function exportJSON() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(collection,null,2)],{type:'application/json'}));
   a.download = `pokescan_backup_${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  toast('📤 JSON exporté !');
+  a.click(); toast('📤 JSON exporté !');
 }
 
 function importJSON(e) {
